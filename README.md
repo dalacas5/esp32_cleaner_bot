@@ -10,11 +10,11 @@ Proyecto que combina **firmware para ESP32-S3** y una **aplicación Flutter** pa
 
 ## Requisitos
 **Firmware**
-- ESP-IDF v5.x
+- ESP-IDF v5.5.0
 - ESP32-S3 DevKit
 
 **App**
-- Flutter >= 3.x
+- Flutter >= 3.32.8
 - Android SDK o Xcode
 
 ## Compilar
