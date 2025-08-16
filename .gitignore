@@ -1,0 +1,29 @@
+# ===== Firmware (ESP-IDF) =====
+build/
+sdkconfig
+sdkconfig.old
+*.bin
+*.elf
+*.map
+
+# ===== Flutter =====
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# iOS
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/.symlinks
+**/ios/Pods
+**/ios/build
+
+# Web
+**/web/.dart_tool
