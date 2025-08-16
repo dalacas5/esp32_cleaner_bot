@@ -35,7 +35,7 @@ jobs:
       - name: Install ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.5.0   # ajusta a tu versión
+          esp_idf_version: latest   # ajusta a tu versión
           target: esp32s3
 
       - name: Build firmware
