@@ -12,14 +12,16 @@
 // Lo obtenemos de un generador de UUID online.
 // UUID: fb1e400c-54a2-4b2b-a6d1-47a2136b00e0
 #define SVC_INST_ID 0
-#define GATTS_SERVICE_UUID_A   0x00E0
+#define GATTS_SERVICE_UUID_A   0x00FF
 #define GATTS_CHAR_UUID_A      0xFF01 // Característica para escribir el estado del LED
 
-#define GATTS_CHAR_UUID_MOTOR  0xFF02 // Nueva característica para el motor
+#define GATTS_CHAR_UUID_MOTOR  0xFF02 // Característica para el motor
+#define GATTS_CHAR_UUID_PUMP   0xFF03 // Nueva característica para la bomba
+
 //#define GATTS_DESCR_UUID_A     0x3333
 //#define GATTS_NUM_HANDLE_A     4
 // #define GATTS_NUM_HANDLE_A     6 // para agregar otra caracteristica al servicio
-#define GATTS_NUM_HANDLE_A     8 // 2 handles extra para los descriptores de nombre.
+#define GATTS_NUM_HANDLE_A     12 // Aumentado para soportar la nueva característica y descriptores
 
 /* --- Declaraciones de Funciones Públicas --- */
 

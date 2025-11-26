@@ -23,14 +23,19 @@
 // Control de los motores
 #include "motor_control.h"
 
+// Control de la bomba
+#include "pump_control.h"
+
 // Nuestro header
 #include "ble_server.h"
 
 static uint16_t motor_char_handle;
+static uint16_t pump_char_handle;
 
 // descriptores de nombre de las caracteristicas del servicio
 static const char *led_descr_str = "Control del LED";
 static const char *motor_descr_str = "Control de Motores";
+static const char *pump_descr_str = "Control de Bomba";
 
 
 #define PROFILE_NUM 1
@@ -143,7 +148,6 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
     switch (event) {
-    // ... los casos REG_EVT y CREATE_EVT no cambian ...
     case ESP_GATTS_REG_EVT:
         esp_ble_gap_set_device_name(DEVICE_NAME);
         esp_ble_gap_config_adv_data(&adv_data);
@@ -177,7 +181,6 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                                          &(esp_bt_uuid_t){.len = ESP_UUID_LEN_16, .uuid = {.uuid16 = ESP_GATT_UUID_CHAR_DESCRIPTION}},
                                          ESP_GATT_PERM_READ,
                                          (esp_attr_value_t *)&(esp_attr_value_t){.attr_max_len = 128, .attr_len = strlen(led_descr_str), .attr_value = (uint8_t *)led_descr_str},
-                                         // CORRECCIÓN: Usar respuesta automática en lugar de NULL
                                          &ctl);
         } else if (char_uuid == GATTS_CHAR_UUID_MOTOR) {
             motor_char_handle = param->add_char.attr_handle;
@@ -185,14 +188,19 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                                          &(esp_bt_uuid_t){.len = ESP_UUID_LEN_16, .uuid = {.uuid16 = ESP_GATT_UUID_CHAR_DESCRIPTION}},
                                          ESP_GATT_PERM_READ,
                                          (esp_attr_value_t *)&(esp_attr_value_t){.attr_max_len = 128, .attr_len = strlen(motor_descr_str), .attr_value = (uint8_t *)motor_descr_str},
-                                         // CORRECCIÓN: Usar respuesta automática en lugar de NULL
+                                         &ctl);
+        } else if (char_uuid == GATTS_CHAR_UUID_PUMP) {
+            pump_char_handle = param->add_char.attr_handle;
+            esp_ble_gatts_add_char_descr(gl_profile_tab[PROFILE_A_APP_ID].service_handle,
+                                         &(esp_bt_uuid_t){.len = ESP_UUID_LEN_16, .uuid = {.uuid16 = ESP_GATT_UUID_CHAR_DESCRIPTION}},
+                                         ESP_GATT_PERM_READ,
+                                         (esp_attr_value_t *)&(esp_attr_value_t){.attr_max_len = 128, .attr_len = strlen(pump_descr_str), .attr_value = (uint8_t *)pump_descr_str},
                                          &ctl);
         }
         break;
     }
 
     case ESP_GATTS_ADD_CHAR_DESCR_EVT: {
-        // CORRECCIÓN 2: Nombre del parámetro del evento
         uint16_t descr_uuid = param->add_char_descr.descr_uuid.uuid.uuid16;
         if (descr_uuid == ESP_GATT_UUID_CHAR_DESCRIPTION) {
              if (motor_char_handle == 0) {
@@ -201,14 +209,19 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                                         &(esp_bt_uuid_t){.len = ESP_UUID_LEN_16, .uuid = {.uuid16 = GATTS_CHAR_UUID_MOTOR}},
                                         ESP_GATT_PERM_WRITE, ESP_GATT_CHAR_PROP_BIT_WRITE,
                                         NULL, NULL);
+             } else if (pump_char_handle == 0) {
+                 ESP_LOGI(GATTS_TAG, "Descriptor del Motor añadido. Añadiendo característica de la Bomba...");
+                 esp_ble_gatts_add_char(gl_profile_tab[PROFILE_A_APP_ID].service_handle,
+                                        &(esp_bt_uuid_t){.len = ESP_UUID_LEN_16, .uuid = {.uuid16 = GATTS_CHAR_UUID_PUMP}},
+                                        ESP_GATT_PERM_WRITE, ESP_GATT_CHAR_PROP_BIT_WRITE,
+                                        NULL, NULL);
              } else {
-                 ESP_LOGI(GATTS_TAG, "Descriptor del Motor añadido. Creación finalizada.");
+                 ESP_LOGI(GATTS_TAG, "Descriptor de la Bomba añadido. Creación finalizada.");
              }
         }
         break;
     }
 
-    // ... los casos WRITE, CONNECT, etc. no cambian ...
     case ESP_GATTS_WRITE_EVT:
         if (param->write.handle == gl_profile_tab[PROFILE_A_APP_ID].char_handle && param->write.len > 0) {
             led_control_set_state(param->write.value[0] == 0x01);
@@ -217,7 +230,11 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             uint8_t direction = param->write.value[1];
             uint8_t speed = param->write.value[2];
             motor_control_set(motor_id, direction, speed);
+        } else if (param->write.handle == pump_char_handle && param->write.len > 0) {
+            bool enable = (param->write.value[0] == 0x01);
+            pump_control_set(enable);
         }
+        
         if (param->write.need_rsp) {
             esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
         }
@@ -272,6 +289,8 @@ void ble_server_start(void)
     // Inicializacion de los motores
     motor_control_init();
     
+    // Inicializacion de la bomba
+    pump_control_init();
 
     // Inicializar el controlador Bluetooth
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
