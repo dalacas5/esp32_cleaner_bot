@@ -18,7 +18,7 @@ typedef struct {
 // ¡IMPORTANTE! Debes ajustar estos pines a tu hardware real.
 static const motor_config_t motor_configs[4] = {
     { .pwm_gpio = GPIO_NUM_2,  .in1_gpio = GPIO_NUM_4,  .in2_gpio = GPIO_NUM_5,  .ledc_channel = LEDC_CHANNEL_0 }, // Motor 0
-    // { .pwm_gpio = 4,  .in1_gpio = 5,  .in2_gpio = 6,  .ledc_channel = LEDC_CHANNEL_1 }, // Motor 1
+    { .pwm_gpio = GPIO_NUM_6,  .in1_gpio = GPIO_NUM_7,  .in2_gpio = GPIO_NUM_17,  .ledc_channel = LEDC_CHANNEL_1 }, // Motor 1
     // { .pwm_gpio = 7,  .in1_gpio = 8,  .in2_gpio = 9,  .ledc_channel = LEDC_CHANNEL_2 }, // Motor 2
     // { .pwm_gpio = 10, .in1_gpio = 11, .in2_gpio = 12, .ledc_channel = LEDC_CHANNEL_3 }  // Motor 3
 };
